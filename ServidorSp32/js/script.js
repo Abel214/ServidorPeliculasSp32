@@ -22,31 +22,21 @@ const obtenerPeliculasFamilia = async () => {
         
         if (respuesta.status === 200) {
             const datos = await respuesta.json();
-            
             let peliculas = "";
+            
             datos.results.forEach(pelicula => {
                 peliculas += `
-                    <div class="pelicula">
+                    <div class="pelicula" onclick="window.location.href='pelicula.html?id=${pelicula.id}'">
                         <img class="poster" src="https://image.tmdb.org/t/p/w500/${pelicula.poster_path}" alt="${pelicula.title}">
-                        <h3 class="titulo">${pelicula.title}</h3>
                     </div>
                 `;
             });
-
+            
             document.getElementById("contenedor").innerHTML = peliculas;
-
-        } else if (respuesta.status === 401) {
-            console.log("API Key incorrecta.");
-        } else if (respuesta.status === 404) {
-            console.log("Películas no encontradas.");
-        } else {
-            console.log("Hubo un error inesperado.");
         }
-
     } catch (error) {
         console.log("Error en la petición:", error);
     }
 };
 
-// Llamar la función al cargar la página
 obtenerPeliculasFamilia();
