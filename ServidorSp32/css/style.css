@@ -150,3 +150,55 @@ body {
 .info-adicional p {
     margin: 10px 0;
 }
+.barra-busqueda {
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    display: flex;
+    gap: 10px;
+}
+
+.input-busqueda {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 20px;
+    background: #2c2c2c;
+    color: #fff;
+    font-size: 16px;
+}
+
+.input-busqueda:focus {
+    outline: none;
+    background: #3c3c3c;
+}
+
+.btn-buscar {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background: #241744;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-buscar:hover {
+    background: #137c32;
+}
+.no-resultados {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.error {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 0, 0, 0.1);
+    border-radius: 10px;
+    color: #ff6b6b;
+}
