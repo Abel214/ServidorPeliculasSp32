@@ -45,96 +45,88 @@ const cargarDetallesPelicula = async (movieId) => {
 const actualizarContenidoPelicula = (peliculaYTS) => {
     const contenedorDetalle = document.getElementById('contenedorDetalle');
     
-    // Verificar si ya existe el recuadro de reproducción
-    let recuadroReproducir = document.getElementById('recuadroReproducir');
-    if (!recuadroReproducir) {
-        recuadroReproducir = document.createElement('div');
-        recuadroReproducir.id = 'recuadroReproducir';
-        recuadroReproducir.classList.add('recuadro-reproducir');
-        recuadroReproducir.innerHTML = ` 
-            <img src="https://img.icons8.com/ios-filled/50/000000/play.png" alt="Reproducir" class="icono-reproducir">
-            <p>Haz clic para ver la película</p>
-        `;
-    }
-
     // Obtener datos de la película
     const posterPath = peliculaYTS.medium_cover_image || 'ruta-a-imagen-por-defecto.jpg';
     const synopsis = peliculaYTS.synopsis || 'No hay sinopsis disponible.';
-    const screenshots = peliculaYTS.screenshots || [];
     const cast = peliculaYTS.cast || [];
 
-    // Mostrar los detalles de la película
-    contenedorDetalle.innerHTML = ` 
-        <div class="detallePelicula">
-            <img class="poster" src="${posterPath}" alt="${peliculaYTS.title}">
-            <h1 class="titulo">${peliculaYTS.title}</h1>
-           
-            <div class="info-adicional">
-                <p><strong>Fecha de estreno:</strong> ${peliculaYTS.year || 'No disponible'}</p>
-                <p><strong>Puntuación:</strong> ${peliculaYTS.rating || 'No disponible'}/10</p>
+    // Mostrar los detalles de la película con nueva estructura
+    contenedorDetalle.innerHTML = `
+        <div class="pelicula-contenedor">
+            <div class="pelicula-header">
+                <!-- Columna izquierda con poster -->
+                <div class="poster-container">
+                    <img class="poster" src="${posterPath}" alt="${peliculaYTS.title}">
+                </div>
+                
+                <!-- Columna derecha con información -->
+                <div class="info-container">
+                    <h1 class="titulo">${peliculaYTS.title}</h1>
+                    
+                    <div class="info-adicional">
+                        <p><strong>Fecha de estreno:</strong> ${peliculaYTS.year || 'No disponible'}</p>
+                        <p><strong>Puntuación:</strong> ${peliculaYTS.rating || 'No disponible'}/10</p>
+                        <p><strong>Sinopsis:</strong> ${synopsis}</p>
+                    </div>
+
+                    <div class="elenco">
+                        <h3>Elenco</h3>
+                        ${cast.length > 0 ? 
+                            cast.map(actor => `
+                                <p><strong>${actor.name}</strong> - ${actor.character_name}</p>`).join('') : 
+                            `<p>No hay información de elenco disponible.</p>`}
+                    </div>
+
+                    <!-- Selector de calidad -->
+                    <div class="selector-calidad">
+                        <h3>Calidad a reproducir</h3>
+                        <select id="torrentSelect">
+                            <option value="">Selecciona la calidad</option>
+                            ${peliculaYTS.torrents && peliculaYTS.torrents.length > 0 ? 
+                                peliculaYTS.torrents.map(torrent => `
+                                    <option value="${torrent.hash}">${torrent.quality} - ${torrent.size}</option>`).join('') : 
+                                `<option disabled>No hay calidades disponibles</option>`}
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <!-- Elenco -->
-            <div class="elenco">
-                <h3>Elenco</h3>
-                ${cast.length > 0 ? 
-                    cast.map(actor => ` 
-                        <p><strong>${actor.name}</strong> - ${actor.character_name}</p>`).join('') : 
-                    `<p>No hay información de elenco disponible.</p>`}
-            </div>
-            <div class="torrents">
-                <h3>Enlaces de descarga</h3>
-                ${peliculaYTS.torrents && peliculaYTS.torrents.length > 0 ? 
-                    peliculaYTS.torrents.map(torrent => ` 
-                        <p><strong>${torrent.quality}</strong> - <a href="${torrent.url}" target="_blank">Descargar</a></p>`).join('') : 
-                    `<p>No se encontraron enlaces de descarga.</p>`}
-            </div>
-            <!-- Selección de calidad y enlaces de descarga -->
-            <div class="torrents">
-                <h3>Calidad a reproducir</h3>
-                <select id="torrentSelect">
-                    <option value="">Selecciona la calidad</option>
-                    ${peliculaYTS.torrents && peliculaYTS.torrents.length > 0 ? 
-                        peliculaYTS.torrents.map(torrent => ` 
-                            <option value="${torrent.hash}">${torrent.quality} - ${torrent.size}</option>`).join('') : 
-                    `<p>No se encontraron enlaces de descarga.</p>`}
-                </select>
-               
+            <!-- Contenedor del reproductor -->
+            <div class="player-container">
+                <div id="player" class="webtor"></div>
             </div>
         </div>
     `;
 
+    // Mover el recuadro de reproducción dentro del player
+    const playerContainer = document.getElementById('player');
+    const recuadroReproducir = document.getElementById('recuadroReproducir');
+    if (recuadroReproducir) {
+        playerContainer.appendChild(recuadroReproducir);
+    }
+
+    // Event listener para el selector de calidad
     const torrentSelect = document.getElementById('torrentSelect');
     torrentSelect.addEventListener('change', (event) => {
-    const selectedHash = event.target.value;
-
-    if (selectedHash) {
-        const selectedTorrent = peliculaYTS.torrents.find(torrent => torrent.hash === selectedHash);
-
-        const trackers = [
-            'udp://tracker.opentrackr.org:1337/announce',
-            'udp://open.tracker.cl:1337/announce',
-            'udp://p4p.arenabg.com:1337/announce',
-            'udp://tracker.torrent.eu.org:451/announce',
-            'udp://tracker.dler.org:6969/announce',
-            'udp://open.stealth.si:80/announce',
-            'udp://ipv4.tracker.harry.lu:80/announce',
-            'https://opentracker.i2p.rocks:443/announce'
-        ];
-
-        // Construir la URL del magnet con rastreadores actualizados
-        const magnetURL = `magnet:?xt=urn:btih:${selectedTorrent.hash.toLowerCase()}&dn=${encodeURIComponent(peliculaYTS.title)}&tr=${trackers.join('&tr=')}`;
-
-        console.log('Magnet URL:', magnetURL);
-
-        // Guardar en localStorage
-        localStorage.setItem('magnetLink', magnetURL);
-    } else {
-        alert('Por favor, selecciona una calidad.');
-    }
-});
-
+        const selectedHash = event.target.value;
+        if (selectedHash) {
+            const selectedTorrent = peliculaYTS.torrents.find(torrent => torrent.hash === selectedHash);
+            const trackers = [
+                'udp://tracker.opentrackr.org:1337/announce',
+                'udp://open.tracker.cl:1337/announce',
+                'udp://p4p.arenabg.com:1337/announce',
+                'udp://tracker.torrent.eu.org:451/announce',
+                'udp://tracker.dler.org:6969/announce',
+                'udp://open.stealth.si:80/announce',
+                'udp://ipv4.tracker.harry.lu:80/announce',
+                'https://opentracker.i2p.rocks:443/announce'
+            ];
+            const magnetURL = `magnet:?xt=urn:btih:${selectedTorrent.hash.toLowerCase()}&dn=${encodeURIComponent(peliculaYTS.title)}&tr=${trackers.join('&tr=')}`;
+            localStorage.setItem('magnetLink', magnetURL);
+        }
+    });
 };
+
 
 // Función para cargar el iframe con el enlace del torrent
 const cargarIframe = (magnetURL) => {
