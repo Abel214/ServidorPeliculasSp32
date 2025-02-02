@@ -17,86 +17,157 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 const cargarDetallesPelicula = async (movieId) => {
     try {
-        // Obtener detalles de la película
-        const respuestaPelicula = await fetch(
-            `https://api.themoviedb.org/3/movie/${movieId}?api_key=d5c775389c73a0b2a2bc815d05093528&language=es-MX`
-        );
-
-        if (!respuestaPelicula.ok) {
-            throw new Error('Error al obtener detalles de la película');
-        }
-
-        const pelicula = await respuestaPelicula.json();
+        // Usamos el parámetro 'movie_id' para la solicitud de la API
+        const url = `https://yts.mx/api/v2/movie_details.json?movie_id=${movieId}&with_images=true&with_cast=true`;
         
-        // Obtener el tráiler
-        const trailer = await obtenerTrailer(movieId);
+        console.log('URL de la API:', url);  // Verificar la URL generada
 
-        // Actualizar el contenido de la página
-        actualizarContenidoPelicula(pelicula, trailer);
-    } catch (error) {
-        console.error('Error en cargarDetallesPelicula:', error);
-        mostrarError('Error al cargar los detalles de la película');
-    }
-};
+        const respuesta = await fetch(url);
 
-const obtenerTrailer = async (movieId) => {
-    try {
-        const respuesta = await fetch(
-            `https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=d5c775389c73a0b2a2bc815d05093528&language=es-MX`
-        );
+        if (respuesta.status === 200) {
+            const datos = await respuesta.json();
+            const pelicula = datos.data.movie;
 
-        if (!respuesta.ok) {
-            throw new Error('Error al obtener el tráiler');
+            // Verificar si la respuesta contiene la información correcta
+            console.log('Respuesta de la API:', pelicula);
+
+            // Mostrar los detalles de la película
+            actualizarContenidoPelicula(pelicula);
+        } else {
+            throw new Error('No se encontraron detalles de la película');
         }
-
-        const datos = await respuesta.json();
-        const trailer = datos.results.find(video => video.type === "Trailer");
-        return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
     } catch (error) {
-        console.error('Error en obtenerTrailer:', error);
-        return null;
+        console.log("Error al obtener detalles de la película:", error);
+        mostrarError('No se pudieron cargar los detalles de la película');
     }
 };
 
-const actualizarContenidoPelicula = (pelicula, trailerUrl) => {
+const actualizarContenidoPelicula = (peliculaYTS) => {
     const contenedorDetalle = document.getElementById('contenedorDetalle');
     
-    // Verificar si hay una imagen de póster
-    const posterPath = pelicula.poster_path 
-        ? `https://image.tmdb.org/t/p/w500${pelicula.poster_path}`
-        : 'ruta-a-imagen-por-defecto.jpg';
+    // Verificar si ya existe el recuadro de reproducción
+    let recuadroReproducir = document.getElementById('recuadroReproducir');
+    if (!recuadroReproducir) {
+        recuadroReproducir = document.createElement('div');
+        recuadroReproducir.id = 'recuadroReproducir';
+        recuadroReproducir.classList.add('recuadro-reproducir');
+        recuadroReproducir.innerHTML = ` 
+            <img src="https://img.icons8.com/ios-filled/50/000000/play.png" alt="Reproducir" class="icono-reproducir">
+            <p>Haz clic para ver la película</p>
+        `;
+    }
 
-    contenedorDetalle.innerHTML = `
+    // Obtener datos de la película
+    const posterPath = peliculaYTS.medium_cover_image || 'ruta-a-imagen-por-defecto.jpg';
+    const synopsis = peliculaYTS.synopsis || 'No hay sinopsis disponible.';
+    const screenshots = peliculaYTS.screenshots || [];
+    const cast = peliculaYTS.cast || [];
+
+    // Mostrar los detalles de la película
+    contenedorDetalle.innerHTML = ` 
         <div class="detallePelicula">
-            <img class="poster" src="${posterPath}" alt="${pelicula.title}">
-            <h1 class="titulo">${pelicula.title}</h1>
-            <p class="descripcion">${pelicula.overview || 'No hay descripción disponible.'}</p>
+            <img class="poster" src="${posterPath}" alt="${peliculaYTS.title}">
+            <h1 class="titulo">${peliculaYTS.title}</h1>
+           
             <div class="info-adicional">
-                <p><strong>Fecha de estreno:</strong> ${pelicula.release_date || 'No disponible'}</p>
-                <p><strong>Puntuación:</strong> ${pelicula.vote_average || 'No disponible'}/10</p>
+                <p><strong>Fecha de estreno:</strong> ${peliculaYTS.year || 'No disponible'}</p>
+                <p><strong>Puntuación:</strong> ${peliculaYTS.rating || 'No disponible'}/10</p>
             </div>
-            ${trailerUrl ? `
-                <button class="trailer-btn" onclick="verTrailer('${trailerUrl}')">
-                    Ver Tráiler
-                </button>
-            ` : ''}
+
+            <!-- Elenco -->
+            <div class="elenco">
+                <h3>Elenco</h3>
+                ${cast.length > 0 ? 
+                    cast.map(actor => ` 
+                        <p><strong>${actor.name}</strong> - ${actor.character_name}</p>`).join('') : 
+                    `<p>No hay información de elenco disponible.</p>`}
+            </div>
+            <div class="torrents">
+                <h3>Enlaces de descarga</h3>
+                ${peliculaYTS.torrents && peliculaYTS.torrents.length > 0 ? 
+                    peliculaYTS.torrents.map(torrent => ` 
+                        <p><strong>${torrent.quality}</strong> - <a href="${torrent.url}" target="_blank">Descargar</a></p>`).join('') : 
+                    `<p>No se encontraron enlaces de descarga.</p>`}
+            </div>
+            <!-- Selección de calidad y enlaces de descarga -->
+            <div class="torrents">
+                <h3>Calidad a reproducir</h3>
+                <select id="torrentSelect">
+                    <option value="">Selecciona la calidad</option>
+                    ${peliculaYTS.torrents && peliculaYTS.torrents.length > 0 ? 
+                        peliculaYTS.torrents.map(torrent => ` 
+                            <option value="${torrent.hash}">${torrent.quality} - ${torrent.size}</option>`).join('') : 
+                    `<p>No se encontraron enlaces de descarga.</p>`}
+                </select>
+               
+            </div>
         </div>
     `;
+
+    const torrentSelect = document.getElementById('torrentSelect');
+    torrentSelect.addEventListener('change', (event) => {
+    const selectedHash = event.target.value;
+
+    if (selectedHash) {
+        const selectedTorrent = peliculaYTS.torrents.find(torrent => torrent.hash === selectedHash);
+
+        const trackers = [
+            'udp://tracker.opentrackr.org:1337/announce',
+            'udp://open.tracker.cl:1337/announce',
+            'udp://p4p.arenabg.com:1337/announce',
+            'udp://tracker.torrent.eu.org:451/announce',
+            'udp://tracker.dler.org:6969/announce',
+            'udp://open.stealth.si:80/announce',
+            'udp://ipv4.tracker.harry.lu:80/announce',
+            'https://opentracker.i2p.rocks:443/announce'
+        ];
+
+        // Construir la URL del magnet con rastreadores actualizados
+        const magnetURL = `magnet:?xt=urn:btih:${selectedTorrent.hash.toLowerCase()}&dn=${encodeURIComponent(peliculaYTS.title)}&tr=${trackers.join('&tr=')}`;
+
+        console.log('Magnet URL:', magnetURL);
+
+        // Guardar en localStorage
+        localStorage.setItem('magnetLink', magnetURL);
+    } else {
+        alert('Por favor, selecciona una calidad.');
+    }
+});
+
+};
+
+// Función para cargar el iframe con el enlace del torrent
+const cargarIframe = (magnetURL) => {
+    const contenedorDetalle = document.getElementById('contenedorDetalle');
+    
+    let iframeContainer = document.getElementById('iframeContainer');
+    if (!iframeContainer) {
+        iframeContainer = document.createElement('div');
+        iframeContainer.id = 'iframeContainer';
+        contenedorDetalle.appendChild(iframeContainer);
+    }
+
+    const encodedMagnetURL = encodeURIComponent(magnetURL);
+    const iframeSrc = `https://webtor.io/api/v1/torrent?url=${encodedMagnetURL}&mode=video`;
+
+    iframeContainer.innerHTML = ` 
+        <iframe id="webtor-player" width="100%" allowfullscreen="" webkitallowfullscreen="" 
+            mozallowfullscreen="" scrolling="no" frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; fullscreen; picture-in-picture"
+            src="${iframeSrc}" style="overflow: hidden; height: 400px; width: 100%;"></iframe>
+    `;
+};
+
+const redirigirAMirarAhora = (hashTorrent) => {
+    const hashEnMinusculas = hashTorrent === hashTorrent.toLowerCase() ? hashTorrent : hashTorrent.toLowerCase();
+    window.location.href = `https://webtor.io/${hashEnMinusculas}`;
 };
 
 const mostrarError = (mensaje) => {
     const contenedorDetalle = document.getElementById('contenedorDetalle');
-    contenedorDetalle.innerHTML = `
+    contenedorDetalle.innerHTML = ` 
         <div class="error">
             <p>${mensaje}</p>
         </div>
     `;
-};
-
-const verTrailer = (url) => {
-    if (url) {
-        window.open(url, "_blank");
-    } else {
-        alert("No hay tráiler disponible para esta película.");
-    }
 };

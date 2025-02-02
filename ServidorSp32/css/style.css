@@ -194,11 +194,188 @@ body {
     border-radius: 10px;
 }
 
-.error {
-    grid-column: 1 / -1;
+/* Estilos para la página */
+#video-container {
+    width: 100%;
+    height: 500px;
+    margin-bottom: 20px;
+}
+
+#contenedorDetalle {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilo para el título de la película */
+/* Estilo para la lista de elenco */
+.elenco p {
+    color: #ff9f9f; /* Color más suave que el anterior */
+    font-family: 'Arial', sans-serif; /* Fuente más moderna y legible */
+    font-size: 1.1em; /* Aumentar ligeramente el tamaño de la fuente */
+    margin: 8px 0;
+    line-height: 1.5; /* Mejora la legibilidad */
+}
+
+/* Estilo para los botones */
+.detallePelicula .titulo {
+    color: #f5e542; /* Amarillo dorado para mejor contraste */
+    font-size: 2.2em; /* Un poco más grande */
+    font-family: 'Verdana', sans-serif; /* Fuente más impactante */
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px #000; /* Agrega sombra al texto para resaltar */
+}
+
+/* Estilo para la información adicional */
+.info-adicional p {
+    color: #dcdcdc; /* Gris claro para un fondo oscuro */
+    font-size: 1.2em; /* Aumentar ligeramente el tamaño */
+    margin: 6px 0;
+    line-height: 1.6; /* Mayor separación entre líneas */
+    font-family: 'Georgia', serif; /* Fuente elegante y legible */
+}
+
+/* Estilo para los enlaces de descarga */
+.torrents p {
+    margin: 12px 0;
+    font-size: 1.1em;
+    font-family: 'Tahoma', sans-serif;
+}
+
+/* Estilo para los botones */
+button {
+    padding: 12px 20px; /* Mayor espacio interior para los botones */
+    font-size: 1.2em; /* Aumenta un poco más el tamaño de letra */
+    font-weight: bold; /* Botones más destacados */
+    cursor: pointer;
+    border: none; /* Eliminar bordes predeterminados */
+    border-radius: 8px; /* Bordes redondeados */
+    background-color: #137c32; /* Fondo verde para los botones */
+    color: white; /* Texto blanco */
+    transition: background-color 0.3s, transform 0.3s ease;
+}
+
+button:hover {
+    background-color: #3cb371; /* Color más brillante al pasar el ratón */
+    transform: scale(1.05); /* Efecto de aumento */
+}
+
+/* Estilo para los errores */
+.error p {
+    color: #ff3333; /* Rojo más intenso */
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+/* Estilo para el recuadro de reproducción */
+.recuadro-reproducir {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 240px;
+    height: 240px;
+    border: 3px solid #137c32;
+    border-radius: 12px;
+    background-color: #4d4d4d; /* Fondo en gris plomo */
+    margin: 20px auto;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.recuadro-reproducir:hover {
+    background-color: #333333; /* Fondo más oscuro */
+    transform: scale(1.05);
+}
+
+.icono-reproducir {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 12px;
+    transition: transform 0.3s ease;
+}
+
+.recuadro-reproducir:hover .icono-reproducir {
+    transform: rotate(180deg);
+}
+
+.recuadro-reproducir p {
+    font-size: 20px;
+    color: #fff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.recuadro-reproducir:hover p {
+    color: #137c32; /* Cambio de color en el texto */
+}
+
+/* Estilo de texto en la sección de loading */
+.loading {
+    font-size: 20px;
+    color: #fff;
     text-align: center;
     padding: 20px;
-    background: rgba(255, 0, 0, 0.1);
+}
+
+/* Ajustes del reproductor */
+#player {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    max-width: 800px;
+    height: 450px;
+    margin: 20px auto;
     border-radius: 10px;
-    color: #ff6b6b;
+    overflow: hidden;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Asegurar que el reproductor Webtor se ajuste dentro del contenedor */
+.webtor iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.torrents a {
+    color: orange !important;
+    text-decoration: none;
+}
+/* Estilo para el select de torrents */
+#torrentSelect {
+    font-family: 'Verdana', sans-serif;
+    font-size: 1.1em;
+    color: #fff; /* Texto blanco */
+    background-color: #333333; /* Fondo gris oscuro */
+    border: 2px solid #137c32; /* Borde verde */
+    border-radius: 8px; /* Bordes redondeados */
+    padding: 10px 15px; /* Espaciado interno */
+    width: 100%; /* Ocupa todo el ancho disponible */
+    max-width: 300px; /* Limita el ancho máximo */
+    margin: 0 auto; /* Centrado horizontal */
+    cursor: pointer; /* Cambia el cursor al pasar el ratón */
+    transition: all 0.3s ease; /* Transición suave */
+}
+
+/* Estilo para el select cuando el ratón pasa sobre él */
+#torrentSelect:hover {
+    background-color: #2c2c2c; /* Fondo más oscuro */
+    border-color: #3cb371; /* Verde más brillante */
+}
+
+/* Estilo para las opciones del select */
+#torrentSelect option {
+    background-color: #333333; /* Fondo oscuro */
+    color: #fff; /* Texto blanco */
+    padding: 10px; /* Espaciado interno */
+    font-size: 1.1em;
+}
+
+/* Estilo para el select cuando se encuentra abierto */
+#torrentSelect:focus {
+    outline: none; /* Elimina el borde de enfoque predeterminado */
+    border-color: #f5e542; /* Borde amarillo cuando está enfocado */
+    box-shadow: 0 0 5px rgba(245, 229, 66, 0.8); /* Sombra amarilla */
 }

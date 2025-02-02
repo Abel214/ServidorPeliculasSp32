@@ -18,16 +18,23 @@ btnAnterior.addEventListener("click", () => {
 
 const obtenerPeliculasFamilia = async () => {
     try {
-        const respuesta = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=d5c775389c73a0b2a2bc815d05093528&language=es-MX&with_genres=10751&page=${pagina}`);
+        // Usamos la API de YTS para obtener las películas familiares
+        const respuesta = await fetch(`https://yts.mx/api/v2/list_movies.json?genre=family&page=${pagina}`);
         
         if (respuesta.status === 200) {
             const datos = await respuesta.json();
             let peliculas = "";
-            
-            datos.results.forEach(pelicula => {
+
+            datos.data.movies.forEach(pelicula => {
+                // Filtrar películas con títulos inapropiados
+                if (pelicula.title.toLowerCase().includes("xxx") || pelicula.title.toLowerCase().includes("adult")) {
+                    return; // Salir de la iteración si la película tiene contenido inapropiado
+                }
+
+                // En YTS, la imagen de la película está en `medium_cover_image`
                 peliculas += `
                     <div class="pelicula" onclick="window.location.href='pelicula.html?id=${pelicula.id}'">
-                        <img class="poster" src="https://image.tmdb.org/t/p/w500/${pelicula.poster_path}" alt="${pelicula.title}">
+                        <img class="poster" src="${pelicula.medium_cover_image}" alt="${pelicula.title}">
                     </div>
                 `;
             });
@@ -38,6 +45,8 @@ const obtenerPeliculasFamilia = async () => {
         console.log("Error en la petición:", error);
     }
 };
+
+
 document.getElementById('btnBuscar').addEventListener('click', realizarBusqueda);
 document.getElementById('inputBusqueda').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -55,8 +64,9 @@ async function realizarBusqueda() {
     }
 
     try {
+        // Usamos la API de YTS para realizar la búsqueda
         const respuesta = await fetch(
-            `https://api.themoviedb.org/3/search/movie?api_key=d5c775389c73a0b2a2bc815d05093528&language=es-MX&query=${encodeURIComponent(busqueda)}&include_adult=false`
+            `https://yts.mx/api/v2/list_movies.json?query_term=${encodeURIComponent(busqueda)}`
         );
 
         if (!respuesta.ok) {
@@ -67,7 +77,7 @@ async function realizarBusqueda() {
         
         let peliculas = "";
         
-        if (datos.results.length === 0) {
+        if (datos.data.movies.length === 0) {
             document.getElementById('contenedor').innerHTML = `
                 <div class="no-resultados">
                     <p>No se encontraron películas para "${busqueda}"</p>
@@ -76,16 +86,15 @@ async function realizarBusqueda() {
             return;
         }
 
-        datos.results.forEach(pelicula => {
-            if (pelicula.poster_path) {
-                peliculas += `
-                    <div class="pelicula" onclick="window.location.href='pelicula.html?id=${pelicula.id}'">
-                        <img class="poster" 
-                             src="https://image.tmdb.org/t/p/w500/${pelicula.poster_path}" 
-                             alt="${pelicula.title}">
-                    </div>
-                `;
-            }
+        datos.data.movies.forEach(pelicula => {
+            // En YTS, la imagen de la película está en `medium_cover_image`
+            peliculas += `
+                <div class="pelicula" onclick="window.location.href='pelicula.html?id=${pelicula.id}'">
+                    <img class="poster" 
+                         src="${pelicula.medium_cover_image}" 
+                         alt="${pelicula.title}">
+                </div>
+            `;
         });
 
         document.getElementById('contenedor').innerHTML = peliculas;
@@ -99,4 +108,5 @@ async function realizarBusqueda() {
         `;
     }
 }
+
 obtenerPeliculasFamilia();
