@@ -1,5 +1,4 @@
 # ServidorPeliculasSp32
-Créditos al autor que proporciona la Api de Películas: https://github.com/Nahuel61920
 ==========================================================================================================
 Uso de dos Apis para el servidor web con la Sp32
 YTS:https://yts.mx/api se hace uso de esta API para la obtención de las portadas y enlaces.
